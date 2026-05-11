@@ -1,0 +1,33 @@
+# ============================================================================
+# CAD VLM Extraction Project - Complete VS Code Setup
+# ============================================================================
+
+# ── Core ML frameworks ──
+torch>=2.0.0
+torchvision>=0.15.0
+torchaudio>=2.0.0
+
+# Transformers & acceleration
+transformers>=4.40.0
+accelerate>=0.31.0
+bitsandbytes>=0.43.0
+
+# ── Vision & OCR ──
+easyocr>=1.7.0
+pillow>=10.0.0
+pymupdf>=1.24.0
+
+# ── Data handling ──
+pandas>=2.0.0
+openpyxl>=3.1.0
+xlsxwriter>=3.1.0
+
+# ── Progress & logging ──
+tqdm>=4.66.0
+
+# ── Model-specific ──
+einops>=0.8.0
+timm>=0.9.0
+
+# ── Utilities ──
+python-dotenv>=1.0.0

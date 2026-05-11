@@ -1,0 +1,77 @@
+# ============================================================================
+# .gitignore - CAD VLM Extraction Project
+# ============================================================================
+
+# ── Python ──
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# ── Virtual environments ──
+venv/
+ENV/
+env/
+.venv/
+
+# ── Jupyter ──
+.ipynb_checkpoints/
+*.ipynb
+
+# ── IDE ──
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# ── Data files (exclude from git) ──
+*.pdf
+*.docx
+*.xlsx
+*.json
+*.zip
+
+# ── Chat files and documentation (exclude) ──
+chat*.pdf
+web_page_text.txt
+claude_chat*.txt
+
+# ── Model cache (large files - don't track) ──
+models_cache/
+
+# ── Output (generated results - don't track) ──
+outputs/
+
+# ── Logs ──
+logs/
+*.log
+
+# ── OS ──
+.DS_Store
+Thumbs.db
+
+# ── Downloaded/input data (don't track) ──
+input_pdfs/
+cad_vlm_testing/
+
+# ── Keep these files in git ──
+!.gitignore
+!requirements.txt
+!README.md
