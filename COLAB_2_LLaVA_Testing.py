@@ -39,7 +39,7 @@ print(f"VRAM: {torch.cuda.get_device_properties(0).total_memory / 1e9:.1f}GB" if
 # ============================================================================
 !pip install -q transformers accelerate bitsandbytes pillow pymupdf pandas openpyxl tqdm
 
-from transformers import AutoProcessor, AutoModelForVisualReasoning
+from transformers import AutoProcessor, LlamaForCausalLM
 from transformers import BitsAndBytesConfig
 import torch
 
@@ -235,8 +235,7 @@ bnb_config = BitsAndBytesConfig(
     bnb_4bit_use_double_quant=True,
     bnb_4bit_quant_type="nf4"
 )
-
-model = AutoModelForVisualReasoning.from_pretrained(
+model = LlamaForCausalLM.from_pretrained(
     "llava-hf/llava-1.5-7b-hf",
     quantization_config=bnb_config,
     device_map="auto",
