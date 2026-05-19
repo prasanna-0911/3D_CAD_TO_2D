@@ -31,7 +31,7 @@ from scripts.utils import (
 def init_llava():
     """Initialize LLaVA 1.5 7B with 4-bit quantization."""
     import torch
-    from transformers import AutoProcessor, AutoModelForVisualReasoning
+    from transformers import AutoProcessor, LlavaForConditionalGeneration
     from transformers import BitsAndBytesConfig
 
     model_config = MODELS_CONFIG["llava_1.5_7b"]
@@ -47,7 +47,7 @@ def init_llava():
     )
 
     # Load model
-    model = AutoModelForVisualReasoning.from_pretrained(
+    model = LlavaForConditionalGeneration.from_pretrained(
         model_config["model_id"],
         quantization_config=bnb_config,
         device_map="auto",
