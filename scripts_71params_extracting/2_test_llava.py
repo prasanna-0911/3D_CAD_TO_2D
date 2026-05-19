@@ -28,20 +28,20 @@ PDF_ZOOM = 1.0
 def check_gpu_and_load():
     """Check GPU and load LLaVA model."""
     import torch
-    from transformers import AutoProcessor, AutoModelForVisualReasoning
+    from transformers import AutoProcessor, LlavaForConditionalGeneration
     from transformers import BitsAndBytesConfig
     
     gpu_info = get_gpu_memory_info()
     
     if gpu_info["mode"] == "CPU":
-        print("   ⚠️ Running on CPU - will be slow")
+        print("   [WARNING] Running on CPU - will be slow")
     else:
         print(f"   GPU: {gpu_info['device']} ({gpu_info['free_gb']}GB free)")
     
     model_config = MODELS_CONFIG["llava_1.5_7b"]
     
     if not get_gpu_memory_info()["available"] or gpu_info["free_gb"] < 8:
-        print(f"   ⏭️ Skipping - insufficient GPU memory (need ~8GB)")
+        print(f"   [SKIP] Skipping - insufficient GPU memory (need ~8GB)")
         return None, None
     
     print(f"   Loading {model_config['name']}...")
@@ -53,7 +53,7 @@ def check_gpu_and_load():
         bnb_4bit_quant_type="nf4"
     )
     
-    model = AutoModelForVisualReasoning.from_pretrained(
+    model = LlavaForConditionalGeneration.from_pretrained(
         model_config["model_id"],
         quantization_config=bnb_config,
         device_map="auto",
@@ -62,7 +62,7 @@ def check_gpu_and_load():
     
     processor = AutoProcessor.from_pretrained(model_config["model_id"])
     
-    print("   ✅ LLaVA 1.5 7B loaded (4-bit)")
+    print("   [OK] LLaVA 1.5 7B loaded (4-bit)")
     
     return model, processor
 
@@ -285,23 +285,23 @@ def process_target_pdf():
     pdf_path = INPUT_DIR / TARGET_PDF
     
     if not pdf_path.exists():
-        print(f"\n❌ PDF not found: {pdf_path}")
+        print(f"\n[ERROR] PDF not found: {pdf_path}")
         return
     
-    print(f"\n📄 Processing: {pdf_path.name}")
+    print(f"\n[PDF] Processing: {pdf_path.name}")
     
-    print("\n📦 Loading LLaVA model...")
+    print("\n[LOADING] Loading LLaVA model...")
     model, processor = check_gpu_and_load()
     
     if model is None:
-        print("\n⚠️ Skipping LLaVA due to insufficient GPU memory")
+        print("\n[WARNING] Skipping LLaVA due to insufficient GPU memory")
         print("   This model requires ~8GB VRAM")
         return
     
     output_dir = OUTPUT_DIR / "llava_results"
     ensure_dir(output_dir)
     
-    print("\n📄 Converting PDF to image...")
+    print("\n[PDF] Converting PDF to image...")
     image = pdf_to_image(pdf_path, zoom=PDF_ZOOM, max_size=MAX_IMAGE_SIZE)
     
     temp_path = output_dir / f"{pdf_path.stem}_temp.png"
@@ -323,11 +323,11 @@ def process_target_pdf():
     free_gpu_memory()
     
     print("\n" + "=" * 60)
-    print("📊 LLaVA Results Summary")
+    print("[STATS] LLaVA Results Summary")
     print("=" * 60)
     print(f"   71 params detected: {summary['params_71_detected']}/{summary['params_71_total']} ({summary['params_71_detection_rate']}%)")
     
-    print("\n✅ LLaVA extraction complete!")
+    print("\n[OK] LLaVA extraction complete!")
     print(f"   Results saved to: {output_dir}")
     
     return summary
@@ -337,8 +337,8 @@ if __name__ == "__main__":
     try:
         process_target_pdf()
     except KeyboardInterrupt:
-        print("\n\n⚠️ Interrupted by user")
+        print("\n\n[WARNING] Interrupted by user")
     except Exception as e:
-        print(f"\n❌ Error: {e}")
+        print(f"\n[ERROR] Error: {e}")
         import traceback
         traceback.print_exc()

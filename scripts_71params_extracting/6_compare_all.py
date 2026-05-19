@@ -172,14 +172,14 @@ def generate_report():
     """Generate comprehensive comparison report."""
     print_header("Model Comparison Report - 71 Parameters")
     
-    print("\n📂 Scanning for results...")
+    print("\n[SCANNING] Scanning for results...")
     result_files = find_result_files()
     
     available_models = [m for m, files in result_files.items() if files]
     print(f"   Found results for: {', '.join(available_models)}")
     
     if not available_models:
-        print("\n❌ No results found! Run the test scripts first.")
+        print("\n[ERROR] No results found! Run the test scripts first.")
         print("\n   Run in order:")
         print("   1. python scripts_71params_extracting/0_extract_ground_truth.py")
         print("   2. python scripts_71params_extracting/1_test_easyocr.py")
@@ -189,16 +189,16 @@ def generate_report():
         print("   6. python scripts_71params_extracting/5_test_qwen2vl.py")
         return
     
-    print("\n📊 Loading results...")
+    print("\n[STATS] Loading results...")
     all_results = load_model_results(result_files)
     
     report_dir = OUTPUT_DIR / "comparison_reports"
     ensure_dir(report_dir)
     
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-    excel_path = report_dir f"COMPARISON_71PARAMS_{timestamp}.xlsx"
+    excel_path = report_dir / f"COMPARISON_71PARAMS_{timestamp}.xlsx"
     
-    print("\n📈 Generating comparison...")
+    print("\n[CHART] Generating comparison...")
     
     import pandas as pd
     
@@ -223,35 +223,27 @@ def generate_report():
             df_mapping = pd.DataFrame(mapping_table)
             df_mapping.to_excel(writer, sheet_name="Mapping_Comparison", index=False)
     
-    print(f"\n✅ Report saved: {excel_path}")
+    print(f"\n[OK] Report saved: {excel_path}")
     
     print("\n" + "=" * 60)
-    print("📊 MODEL COMPARISON SUMMARY")
+    print("[STATS] MODEL COMPARISON SUMMARY")
     print("=" * 60)
     
     summary_table = create_comparison_table(all_results)
     for row in summary_table:
-        print(f"   {row['Model']}: {row['Detected_Out_of']} ({row['Detection_Rate_%']}%)")
+        print(f"   {row['Model']}: {row['Total_Detected']}/{row['Total_Params']} ({row['Detection_Rate_%']}%)")
     
     print("\n" + "=" * 60)
     
     json_summary = {
         "generated": datetime.now().isoformat(),
         "models_tested": available_models,
-        "summary": {
-            model: {
-                "detected": row["Total_Detected"],
-                "total": row["Total_Params"],
-                "rate": row["Detection_Rate_%"]
-            }
-            for row in summary_table
-        }
     }
     
     json_path = report_dir / f"COMPARISON_SUMMARY_{timestamp}.json"
     save_json(json_summary, json_path)
     
-    print(f"✅ JSON summary: {json_path}")
+    print(f"[OK] JSON summary: {json_path}")
     
     return excel_path
 
@@ -260,6 +252,6 @@ if __name__ == "__main__":
     try:
         generate_report()
     except Exception as e:
-        print(f"\n❌ Error generating report: {e}")
+        print(f"\n[ERROR] Error generating report: {e}")
         import traceback
         traceback.print_exc()

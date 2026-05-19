@@ -189,14 +189,14 @@ def generate_report():
     print_config()
 
     # Find result files
-    print("\n📂 Scanning for results...")
+    print("\n[FOLDER] Scanning for results...")
     result_files = find_result_files()
 
     available_models = [m for m, files in result_files.items() if files]
     print(f"   Found results for: {', '.join(available_models)}")
 
     if not available_models:
-        print("\n❌ No results found! Run the test scripts first.")
+        print("\n[ERROR] No results found! Run the test scripts first.")
         print("\n   Run in order:")
         print("   1. python scripts/1_test_easyocr.py")
         print("   2. python scripts/2_test_llava.py")
@@ -206,7 +206,7 @@ def generate_report():
         return
 
     # Load all results
-    print("\n📊 Loading results...")
+    print("\n[STATS] Loading results...")
     all_results = load_results(result_files)
 
     # Create output directory
@@ -216,7 +216,7 @@ def generate_report():
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     excel_path = report_dir / f"MODEL_COMPARISON_{timestamp}.xlsx"
 
-    print("\n📈 Generating comparison...")
+    print("\n[CHART] Generating comparison...")
 
     with pd.ExcelWriter(excel_path, engine='openpyxl') as writer:
         # Summary sheet
@@ -237,11 +237,11 @@ def generate_report():
             df_accuracy = pd.DataFrame(accuracy)
             df_accuracy.to_excel(writer, sheet_name="Accuracy_Analysis", index=False)
 
-    print(f"\n✅ Report saved: {excel_path}")
+    print(f"\n[OK] Report saved: {excel_path}")
 
     # Print summary
     print("\n" + "=" * 60)
-    print("📊 MODEL COMPARISON SUMMARY")
+    print("[STATS] MODEL COMPARISON SUMMARY")
     print("=" * 60)
 
     for model, results in all_results.items():
@@ -277,7 +277,7 @@ def generate_report():
     json_path = report_dir / f"COMPARISON_SUMMARY_{timestamp}.json"
     save_json(json_summary, json_path)
 
-    print(f"✅ JSON summary: {json_path}")
+    print(f"[OK] JSON summary: {json_path}")
 
     return excel_path
 
@@ -286,6 +286,6 @@ if __name__ == "__main__":
     try:
         generate_report()
     except Exception as e:
-        print(f"\n❌ Error generating report: {e}")
+        print(f"\n[ERROR] Error generating report: {e}")
         import traceback
         traceback.print_exc()

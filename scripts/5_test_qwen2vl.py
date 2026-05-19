@@ -40,7 +40,7 @@ def init_qwen2vl():
 
     # Check if we have enough VRAM
     if not can_load_model(model_config["vram_estimate_gb"], safety_margin_gb=2.0):
-        print(f"\n⚠️ Warning: May not have enough VRAM ({model_config['vram_estimate_gb']}GB needed)")
+        print(f"\n[WARNING] Warning: May not have enough VRAM ({model_config['vram_estimate_gb']}GB needed)")
         print("   Trying anyway with 8-bit quantization...")
 
     # 8-bit quantization
@@ -63,14 +63,14 @@ def init_qwen2vl():
             trust_remote_code=True
         )
 
-        print("   ✅ Qwen2-VL 7B loaded (8-bit)")
+        print("   [OK] Qwen2-VL 7B loaded (8-bit)")
 
         if torch.cuda.is_available():
             vram_used = torch.cuda.memory_allocated(0) / 1e9
             print(f"   VRAM used: {vram_used:.2f} GB")
 
     except Exception as e:
-        print(f"❌ Failed to load with 8-bit: {e}")
+        print(f"[ERROR] Failed to load with 8-bit: {e}")
         print("   Try running on Google Colab with T4 GPU instead.")
         raise
 
@@ -224,13 +224,13 @@ def process_all_drawings():
 
     gpu_info = get_gpu_info()
     if not gpu_info["available"]:
-        print("\n❌ Qwen2-VL requires GPU. Run on Google Colab instead.")
+        print("\n[ERROR] Qwen2-VL requires GPU. Run on Google Colab instead.")
         return
 
     print(f"\nGPU: {gpu_info['device']} ({gpu_info['free_gb']}GB free)")
 
     if gpu_info["free_gb"] < 8:
-        print("\n⚠️ Less than 8GB VRAM - Qwen2-VL may crash.")
+        print("\n[WARNING] Less than 8GB VRAM - Qwen2-VL may crash.")
         print("   Consider running on Google Colab with T4 GPU.")
         response = input("Continue anyway? (y/n): ")
         if response.lower() != 'y':
@@ -238,12 +238,12 @@ def process_all_drawings():
 
     pdf_files = list(INPUT_DIR.glob("*.pdf"))
     if not pdf_files:
-        print(f"\n❌ No PDFs in {INPUT_DIR}")
+        print(f"\n[ERROR] No PDFs in {INPUT_DIR}")
         return
 
-    print(f"\n📄 Found {len(pdf_files)} PDFs")
+    print(f"\n[PDF] Found {len(pdf_files)} PDFs")
 
-    print("\n📦 Loading Qwen2-VL 7B...")
+    print("\n[LOADING] Loading Qwen2-VL 7B...")
     model, processor = init_qwen2vl()
 
     output_dir = OUTPUT_DIR / "qwen2vl_results"
@@ -254,7 +254,7 @@ def process_all_drawings():
 
     for pdf_path in tqdm(pdf_files, desc="Processing"):
         drawing_name = pdf_path.stem
-        print(f"\n📄 {drawing_name}")
+        print(f"\n[PDF] {drawing_name}")
 
         image = pdf_to_image(
             pdf_path,
@@ -286,7 +286,7 @@ def process_all_drawings():
         "results": all_results
     }, combined_path)
 
-    print("\n✅ Qwen2-VL testing complete!")
+    print("\n[OK] Qwen2-VL testing complete!")
     print(f"   Results: {output_dir}")
 
     return all_results
@@ -296,8 +296,8 @@ if __name__ == "__main__":
     try:
         process_all_drawings()
     except KeyboardInterrupt:
-        print("\n\n⚠️ Interrupted")
+        print("\n\n[WARNING] Interrupted")
     except Exception as e:
-        print(f"\n❌ Error: {e}")
+        print(f"\n[ERROR] Error: {e}")
         import traceback
         traceback.print_exc()

@@ -66,7 +66,7 @@ def pdf_to_image(
         ratio = max_size / max(image.size)
         new_size = (int(image.width * ratio), int(image.height * ratio))
         image = image.resize(new_size, Image.Resampling.LANCZOS)
-        print(f"   Resized: {pix.width}x{pix.height} → {new_size[0]}x{new_size[1]}")
+        print(f"   Resized: {pix.width}x{pix.height} -> {new_size[0]}x{new_size[1]}")
     else:
         print(f"   Image: {image.width}x{image.height} px ({zoom}x zoom)")
 
@@ -116,7 +116,7 @@ def free_gpu_memory() -> None:
 def get_gpu_memory_info() -> Dict[str, Any]:
     """Get current GPU memory usage."""
     if not torch.cuda.is_available():
-        return {"mode": "CPU", "allocated_gb": 0, "total_gb": 0}
+        return {"mode": "CPU", "available": False, "allocated_gb": 0, "total_gb": 0, "free_gb": 0}
 
     allocated = torch.cuda.memory_allocated(0) / 1e9
     reserved = torch.cuda.memory_reserved(0) / 1e9
@@ -124,6 +124,7 @@ def get_gpu_memory_info() -> Dict[str, Any]:
 
     return {
         "mode": "GPU",
+        "available": True,
         "device": torch.cuda.get_device_name(0),
         "allocated_gb": round(allocated, 2),
         "reserved_gb": round(reserved, 2),
@@ -258,7 +259,7 @@ def categorize_text_elements(elements: List[Dict]) -> Dict[str, List[Dict]]:
         "radius": [r'^R\s*\d+', r'^R\d+'],  # Radius values
         "scale": [r'SCALE\s+\d+:\d+', r'\d+:\d+'],  # Scale notation
         "view": [r'(FRONT|TOP|SIDE|SECTION|DETAIL|A-A|B-B)', r'SCALE\s+\d+:\d+'],
-        "gdt": [r'⊕', r'[A-Z]\s*[0-9]+\.[0-9]+'],  # GD&T symbols
+        "gdt": [r'[POS]', r'[A-Z]\s*[0-9]+\.[0-9]+'],  # GD&T symbols
         "title_block": [r'(REV|DATE|DRAWN|DESIGNED|CHECKED|APPROVED)', r'(PART|DWG|Drawing)'],
     }
 
@@ -287,7 +288,7 @@ def categorize_text_elements(elements: List[Dict]) -> Dict[str, List[Dict]]:
             matched = True
 
         # Check GD&T
-        elif '⊕' in text or re.search(r'[A-Z]\s*[0-9]+\.[0-9]+', text):
+        elif '[POS]' in text or re.search(r'[A-Z]\s*[0-9]+\.[0-9]+', text):
             categories["GD_T"].append(elem)
             matched = True
 
@@ -392,10 +393,10 @@ def print_header(title: str) -> None:
 def print_model_status(model_name: str, status: str, details: str = "") -> None:
     """Print model loading/testing status."""
     status_symbols = {
-        "loading": "📦",
-        "success": "✅",
-        "error": "❌",
-        "skipping": "⏭️",
+        "loading": "[LOADING]",
+        "success": "[OK]",
+        "error": "[ERROR]",
+        "skipping": "[SKIP]",
     }
     symbol = status_symbols.get(status, "•")
     print(f"   {symbol} {model_name}: {details}")

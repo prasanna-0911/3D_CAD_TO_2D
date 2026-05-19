@@ -31,7 +31,7 @@ def init_easyocr():
     print(f"   GPU available: {gpu_available}")
     
     reader = easyocr.Reader(['en'], gpu=gpu_available, verbose=False)
-    print("   ✅ EasyOCR initialized")
+    print("   [OK] EasyOCR initialized")
     return reader
 
 
@@ -85,14 +85,14 @@ def detect_71_params(elements: list) -> dict:
         
         elif param_id in ["25", "26", "27", "28", "29", "30", "31", "32"]:  # GD&T
             gdt_keywords = {
-                "25": ["position", "pos", "⊕"],
-                "26": ["straightness", "—"],
-                "27": ["flatness", "□"],
-                "28": ["circularity", "○"],
-                "29": ["parallelism", "//"],
-                "30": ["perpendicular", "⊥"],
-                "31": ["angularity", "∠"],
-                "32": ["runout", "↗"]
+                "25": ["position", "pos", "[POS]"],
+                "26": ["straightness", "[STR]"],
+                "27": ["flatness", "[FLAT]"],
+                "28": ["circularity", "[CIRC]"],
+                "29": ["parallelism", "[PARA]"],
+                "30": ["perpendicular", "[PERP]"],
+                "31": ["angularity", "[ANG]"],
+                "32": ["runout", "[RUNOUT]"]
             }
             is_detected = any(kw in text_lower for kw in gdt_keywords.get(param_id, []))
         
@@ -281,18 +281,18 @@ def process_target_pdf():
     pdf_path = INPUT_DIR / TARGET_PDF
     
     if not pdf_path.exists():
-        print(f"\n❌ PDF not found: {pdf_path}")
+        print(f"\n[ERROR] PDF not found: {pdf_path}")
         return
     
-    print(f"\n📄 Processing: {pdf_path.name}")
+    print(f"\n[PROCESSING] {pdf_path.name}")
     
-    print("\n📦 Initializing EasyOCR...")
+    print("\n[LOADING] Initializing EasyOCR...")
     reader = init_easyocr()
     
     output_dir = OUTPUT_DIR / "easyocr_results"
     ensure_dir(output_dir)
     
-    print("\n📄 Converting PDF to image...")
+    print("\n[PDF] Converting PDF to image...")
     image = pdf_to_image(pdf_path, zoom=3.0, max_size=2048)
     
     temp_image_path = output_dir / f"{pdf_path.stem}_temp.png"
@@ -316,13 +316,13 @@ def process_target_pdf():
     temp_image_path.unlink(missing_ok=True)
     
     print("\n" + "=" * 60)
-    print("📊 EasyOCR Results Summary")
+    print("[STATS] EasyOCR Results Summary")
     print("=" * 60)
     print(f"   Text elements: {summary['total_text_elements']}")
     print(f"   71 params detected: {summary['params_71_detected']}/{summary['params_71_total']} ({summary['params_71_detection_rate']}%)")
     print(f"   GT params detected: {summary['gt_params_detected']}")
     
-    print("\n✅ EasyOCR extraction complete!")
+    print("\n[OK] EasyOCR extraction complete!")
     print(f"   Results saved to: {output_dir}")
     
     return summary
@@ -332,8 +332,8 @@ if __name__ == "__main__":
     try:
         process_target_pdf()
     except KeyboardInterrupt:
-        print("\n\n⚠️ Interrupted by user")
+        print("\n\n[WARNING] Interrupted by user")
     except Exception as e:
-        print(f"\n❌ Error: {e}")
+        print(f"\n[ERROR] Error: {e}")
         import traceback
         traceback.print_exc()

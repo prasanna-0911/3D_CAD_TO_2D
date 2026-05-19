@@ -48,7 +48,7 @@ def pdf_to_image(pdf_path: str | Path, zoom: float = 2.0, max_size: Optional[int
         ratio = max_size / max(image.size)
         new_size = (int(image.width * ratio), int(image.height * ratio))
         image = image.resize(new_size, Image.Resampling.LANCZOS)
-        print(f"   Resized: {pix.width}x{pix.height} → {new_size[0]}x{new_size[1]}")
+        print(f"   Resized: {pix.width}x{pix.height} -> {new_size[0]}x{new_size[1]}")
     else:
         print(f"   Image: {image.width}x{image.height} px ({zoom}x zoom)")
     
@@ -226,10 +226,10 @@ def print_header(title: str) -> None:
 def print_model_status(model_name: str, status: str, details: str = "") -> None:
     """Print model loading/testing status."""
     status_symbols = {
-        "loading": "📦",
-        "success": "✅",
-        "error": "❌",
-        "skipping": "⏭️",
+        "loading": "[LOADING]",
+        "success": "[OK]",
+        "error": "[ERROR]",
+        "skipping": "[SKIP]",
     }
     symbol = status_symbols.get(status, "•")
     print(f"   {symbol} {model_name}: {details}")
@@ -254,20 +254,21 @@ def get_gpu_memory_info() -> Dict[str, Any]:
     try:
         import torch
         if not torch.cuda.is_available():
-            return {"mode": "CPU", "allocated_gb": 0, "total_gb": 0}
+            return {"mode": "CPU", "available": False, "allocated_gb": 0, "total_gb": 0, "free_gb": 0}
         
         allocated = torch.cuda.memory_allocated(0) / 1e9
         total = torch.cuda.get_device_properties(0).total_memory / 1e9
         
         return {
             "mode": "GPU",
+            "available": True,
             "device": torch.cuda.get_device_name(0),
             "allocated_gb": round(allocated, 2),
             "total_gb": round(total, 2),
             "free_gb": round(total - allocated, 2)
         }
     except:
-        return {"mode": "CPU", "allocated_gb": 0, "total_gb": 0}
+        return {"mode": "CPU", "available": False, "allocated_gb": 0, "total_gb": 0, "free_gb": 0}
 
 def can_load_model(vram_needed_gb: float, safety_margin_gb: float = 1.0) -> bool:
     """Check if model can fit in GPU memory."""

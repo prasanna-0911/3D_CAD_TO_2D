@@ -31,12 +31,12 @@ def check_gpu_and_load():
     gpu_info = get_gpu_memory_info()
     
     if gpu_info["mode"] == "CPU":
-        print("   ⚠️ Running on CPU - will be very slow")
+        print("   [WARNING] Running on CPU - will be very slow")
     else:
         print(f"   GPU: {gpu_info['device']} ({gpu_info['free_gb']}GB free)")
     
     if not get_gpu_memory_info()["available"] or gpu_info["free_gb"] < 10:
-        print(f"   ⏭️ Skipping - insufficient GPU memory (need ~10GB)")
+        print(f"   [SKIP] Skipping - insufficient GPU memory (need ~10GB)")
         return None, None
     
     from transformers import Qwen2VLForConditionalGeneration, AutoProcessor
@@ -53,7 +53,7 @@ def check_gpu_and_load():
     )
     processor = AutoProcessor.from_pretrained(model_config["model_id"])
     
-    print("   ✅ Qwen2-VL 7B loaded (8-bit)")
+    print("   [OK] Qwen2-VL 7B loaded (8-bit)")
     
     return model, processor
 
@@ -218,23 +218,23 @@ def process_target_pdf():
     pdf_path = INPUT_DIR / TARGET_PDF
     
     if not pdf_path.exists():
-        print(f"\n❌ PDF not found: {pdf_path}")
+        print(f"\n[ERROR] PDF not found: {pdf_path}")
         return
     
-    print(f"\n📄 Processing: {pdf_path.name}")
+    print(f"\n[PDF] Processing: {pdf_path.name}")
     
-    print("\n📦 Loading Qwen2-VL model...")
+    print("\n[LOADING] Loading Qwen2-VL model...")
     model, processor = check_gpu_and_load()
     
     if model is None:
-        print("\n⚠️ Skipping Qwen2-VL due to insufficient GPU memory")
+        print("\n[WARNING] Skipping Qwen2-VL due to insufficient GPU memory")
         print("   This model requires ~10GB VRAM")
         return
     
     output_dir = OUTPUT_DIR / "qwen2vl_results"
     ensure_dir(output_dir)
     
-    print("\n📄 Converting PDF to image...")
+    print("\n[PDF] Converting PDF to image...")
     image = pdf_to_image(pdf_path, zoom=PDF_ZOOM, max_size=MAX_IMAGE_SIZE)
     
     print(f"   Extracting with Qwen2-VL...")
@@ -252,10 +252,10 @@ def process_target_pdf():
     free_gpu_memory()
     
     print("\n" + "=" * 60)
-    print("📊 Qwen2-VL Results Summary")
+    print("[STATS] Qwen2-VL Results Summary")
     print("=" * 60)
     print(f"   71 params detected: {summary['params_71_detected']}/{summary['params_71_total']} ({summary['params_71_detection_rate']}%)")
-    print("\n✅ Qwen2-VL extraction complete!")
+    print("\n[OK] Qwen2-VL extraction complete!")
     
     return summary
 
@@ -264,6 +264,6 @@ if __name__ == "__main__":
     try:
         process_target_pdf()
     except Exception as e:
-        print(f"\n❌ Error: {e}")
+        print(f"\n[ERROR] Error: {e}")
         import traceback
         traceback.print_exc()

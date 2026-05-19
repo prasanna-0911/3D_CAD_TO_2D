@@ -47,7 +47,7 @@ def init_blip2():
     # Load processor
     processor = Blip2Processor.from_pretrained(model_config["model_id"])
 
-    print("   ✅ BLIP2 OPT 2.7B loaded")
+    print("   [OK] BLIP2 OPT 2.7B loaded")
 
     return model, processor
 
@@ -96,7 +96,7 @@ def extract_with_blip2(model, processor, image_path: str):
                     num_beams=3
                 )
 
-            # ✅ FIXED DECODING: Slice off input tokens
+            # [OK] FIXED DECODING: Slice off input tokens
             input_len = inputs["input_ids"].shape[1]
             answer = processor.batch_decode(
                 generated_ids[:, input_len:],  # Only new tokens!
@@ -159,18 +159,18 @@ def process_all_drawings():
     if gpu_info["available"]:
         print(f"\nGPU: {gpu_info['device']} ({gpu_info['free_gb']}GB free)")
     else:
-        print("\n⚠️ No GPU - BLIP2 requires CUDA")
+        print("\n[WARNING] No GPU - BLIP2 requires CUDA")
 
     # Find PDFs
     pdf_files = list(INPUT_DIR.glob("*.pdf"))
     if not pdf_files:
-        print(f"\n❌ No PDFs in {INPUT_DIR}")
+        print(f"\n[ERROR] No PDFs in {INPUT_DIR}")
         return
 
-    print(f"\n📄 Found {len(pdf_files)} PDFs")
+    print(f"\n[PDF] Found {len(pdf_files)} PDFs")
 
     # Initialize BLIP2
-    print("\n📦 Loading BLIP2...")
+    print("\n[LOADING] Loading BLIP2...")
     model, processor = init_blip2()
 
     output_dir = OUTPUT_DIR / "blip2_results"
@@ -181,7 +181,7 @@ def process_all_drawings():
 
     for pdf_path in tqdm(pdf_files, desc="Processing"):
         drawing_name = pdf_path.stem
-        print(f"\n📄 {drawing_name}")
+        print(f"\n[PDF] {drawing_name}")
 
         # Convert to image
         image = pdf_to_image(
@@ -217,7 +217,7 @@ def process_all_drawings():
         "results": all_results
     }, combined_path)
 
-    print("\n✅ BLIP2 testing complete!")
+    print("\n[OK] BLIP2 testing complete!")
     print(f"   Results: {output_dir}")
 
     return all_results
@@ -227,8 +227,8 @@ if __name__ == "__main__":
     try:
         process_all_drawings()
     except KeyboardInterrupt:
-        print("\n\n⚠️ Interrupted")
+        print("\n\n[WARNING] Interrupted")
     except Exception as e:
-        print(f"\n❌ Error: {e}")
+        print(f"\n[ERROR] Error: {e}")
         import traceback
         traceback.print_exc()

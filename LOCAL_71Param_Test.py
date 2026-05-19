@@ -187,7 +187,7 @@ def test_easyocr():
     results = []
 
     for pdf_file in INPUT_DIR.glob("*.pdf"):
-        print(f"\n📄 Processing: {pdf_file.name}")
+        print(f"\n[PDF] Processing: {pdf_file.name}")
 
         # Convert PDF to image
         doc = fitz.open(pdf_file)
@@ -275,7 +275,7 @@ def test_blip2():
     results = []
 
     for pdf_file in INPUT_DIR.glob("*.pdf"):
-        print(f"\n📄 Processing: {pdf_file.name}")
+        print(f"\n[PDF] Processing: {pdf_file.name}")
 
         images = pdf_to_image(pdf_file, dpi=100)
 
@@ -345,7 +345,7 @@ def test_llava():
     results = []
 
     for pdf_file in INPUT_DIR.glob("*.pdf"):
-        print(f"\n📄 Processing: {pdf_file.name}")
+        print(f"\n[PDF] Processing: {pdf_file.name}")
 
         images = pdf_to_image(pdf_file, dpi=100)
 
@@ -385,7 +385,7 @@ def test_qwen2vl():
     vram_gb = torch.cuda.get_device_properties(0).total_memory / 1e9 if torch.cuda.is_available() else 0
 
     if vram_gb < 16:
-        print(f"\n⚠️ Qwen2-VL requires ~16GB VRAM. You have {vram_gb:.1f}GB. Skipping...")
+        print(f"\n[WARNING] Qwen2-VL requires ~16GB VRAM. You have {vram_gb:.1f}GB. Skipping...")
         return []
 
     print("\n" + "="*70)
@@ -414,7 +414,7 @@ def test_qwen2vl():
     results = []
 
     for pdf_file in INPUT_DIR.glob("*.pdf"):
-        print(f"\n📄 Processing: {pdf_file.name}")
+        print(f"\n[PDF] Processing: {pdf_file.name}")
 
         images = pdf_to_image(pdf_file, dpi=100)
 
@@ -476,22 +476,22 @@ if __name__ == "__main__":
     try:
         all_results["easyocr"] = test_easyocr()
     except Exception as e:
-        print(f"❌ EasyOCR failed: {e}")
+        print(f"[ERROR] EasyOCR failed: {e}")
 
     try:
         all_results["blip2"] = test_blip2()
     except Exception as e:
-        print(f"❌ BLIP2 failed: {e}")
+        print(f"[ERROR] BLIP2 failed: {e}")
 
     try:
         all_results["llava"] = test_llava()
     except Exception as e:
-        print(f"❌ LLaVA failed: {e}")
+        print(f"[ERROR] LLaVA failed: {e}")
 
     try:
         all_results["qwen"] = test_qwen2vl()
     except Exception as e:
-        print(f"❌ Qwen2-VL failed: {e}")
+        print(f"[ERROR] Qwen2-VL failed: {e}")
 
     # =========================================================================
     # COMPARISON REPORT
@@ -531,7 +531,7 @@ if __name__ == "__main__":
         }).reset_index()
         summary["Detection_Rate_%"] = (summary["Parameters_Detected"] / summary["Total_in_Category"] * 100).round(1)
 
-        print("\n📊 SUMMARY BY MODEL:")
+        print("\n[STATS] SUMMARY BY MODEL:")
         print(summary.to_string(index=False))
 
         # Save comparison report
@@ -540,8 +540,8 @@ if __name__ == "__main__":
             summary.to_excel(writer, sheet_name="Summary", index=False)
             df_comparison.to_excel(writer, sheet_name="Detailed", index=False)
 
-        print(f"\n✅ Comparison report saved: {excel_path}")
+        print(f"\n[OK] Comparison report saved: {excel_path}")
 
     print("\n" + "="*70)
-    print("✅ ALL TESTING COMPLETE!")
+    print("[OK] ALL TESTING COMPLETE!")
     print("="*70)

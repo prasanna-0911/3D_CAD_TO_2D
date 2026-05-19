@@ -41,7 +41,7 @@ def init_easyocr():
     print(f"   GPU available: {gpu_available}")
 
     reader = easyocr.Reader(['en'], gpu=gpu_available, verbose=False)
-    print("   ✅ EasyOCR initialized")
+    print("   [OK] EasyOCR initialized")
     return reader
 
 
@@ -134,15 +134,15 @@ def process_all_drawings():
     # Find all PDFs
     pdf_files = list(INPUT_DIR.glob("*.pdf"))
     if not pdf_files:
-        print(f"\n❌ No PDF files found in {INPUT_DIR}")
+        print(f"\n[ERROR] No PDF files found in {INPUT_DIR}")
         return
 
-    print(f"\n📄 Found {len(pdf_files)} PDF files:")
+    print(f"\n[PDF] Found {len(pdf_files)} PDF files:")
     for pdf in pdf_files:
         print(f"   • {pdf.name}")
 
     # Initialize EasyOCR
-    print("\n📦 Initializing EasyOCR...")
+    print("\n[LOADING] Initializing EasyOCR...")
     reader = init_easyocr()
 
     # Create output directory
@@ -156,7 +156,7 @@ def process_all_drawings():
     for pdf_path in tqdm(pdf_files, desc="Processing drawings"):
         drawing_name = pdf_path.stem
 
-        print(f"\n📄 {drawing_name}")
+        print(f"\n[PDF] {drawing_name}")
 
         # Convert PDF to image
         image = pdf_to_image(
@@ -185,7 +185,7 @@ def process_all_drawings():
 
     # Save combined results
     print("\n" + "=" * 60)
-    print("📊 Summary - All Drawings")
+    print("[STATS] Summary - All Drawings")
 
     combined_path = output_dir / "ALL_DRAWINGS_easyocr_summary.json"
     combined_data = {
@@ -196,7 +196,7 @@ def process_all_drawings():
     }
     save_json(combined_data, combined_path)
 
-    print("\n✅ EasyOCR extraction complete!")
+    print("\n[OK] EasyOCR extraction complete!")
     print(f"   Results saved to: {output_dir}")
 
     return all_results
@@ -206,8 +206,8 @@ if __name__ == "__main__":
     try:
         process_all_drawings()
     except KeyboardInterrupt:
-        print("\n\n⚠️ Interrupted by user")
+        print("\n\n[WARNING] Interrupted by user")
     except Exception as e:
-        print(f"\n❌ Error: {e}")
+        print(f"\n[ERROR] Error: {e}")
         import traceback
         traceback.print_exc()

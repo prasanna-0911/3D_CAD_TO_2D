@@ -31,12 +31,12 @@ def check_gpu_and_load():
     gpu_info = get_gpu_memory_info()
     
     if gpu_info["mode"] == "CPU":
-        print("   ⚠️ Running on CPU - will be slow")
+        print("   [WARNING] Running on CPU - will be slow")
     else:
         print(f"   GPU: {gpu_info['device']} ({gpu_info['free_gb']}GB free)")
     
     if not get_gpu_memory_info()["available"] or gpu_info["free_gb"] < 3:
-        print(f"   ⏭️ Skipping - insufficient GPU memory (need ~3GB)")
+        print(f"   [SKIP] Skipping - insufficient GPU memory (need ~3GB)")
         return None, None
     
     from transformers import AutoModelForVision2Seq, AutoProcessor
@@ -52,7 +52,7 @@ def check_gpu_and_load():
     )
     processor = AutoProcessor.from_pretrained(model_config["model_id"])
     
-    print("   ✅ Moondream2 loaded")
+    print("   [OK] Moondream2 loaded")
     
     return model, processor
 
@@ -198,22 +198,22 @@ def process_target_pdf():
     pdf_path = INPUT_DIR / TARGET_PDF
     
     if not pdf_path.exists():
-        print(f"\n❌ PDF not found: {pdf_path}")
+        print(f"\n[ERROR] PDF not found: {pdf_path}")
         return
     
-    print(f"\n📄 Processing: {pdf_path.name}")
+    print(f"\n[PDF] Processing: {pdf_path.name}")
     
-    print("\n📦 Loading Moondream2 model...")
+    print("\n[LOADING] Loading Moondream2 model...")
     model, processor = check_gpu_and_load()
     
     if model is None:
-        print("\n⚠️ Skipping Moondream2 due to insufficient GPU memory")
+        print("\n[WARNING] Skipping Moondream2 due to insufficient GPU memory")
         return
     
     output_dir = OUTPUT_DIR / "moondream_results"
     ensure_dir(output_dir)
     
-    print("\n📄 Converting PDF to image...")
+    print("\n[PDF] Converting PDF to image...")
     image = pdf_to_image(pdf_path, zoom=PDF_ZOOM, max_size=MAX_IMAGE_SIZE)
     
     print(f"   Extracting with Moondream2...")
@@ -231,10 +231,10 @@ def process_target_pdf():
     free_gpu_memory()
     
     print("\n" + "=" * 60)
-    print("📊 Moondream2 Results Summary")
+    print("[STATS] Moondream2 Results Summary")
     print("=" * 60)
     print(f"   71 params detected: {summary['params_71_detected']}/{summary['params_71_total']} ({summary['params_71_detection_rate']}%)")
-    print("\n✅ Moondream2 extraction complete!")
+    print("\n[OK] Moondream2 extraction complete!")
     
     return summary
 
@@ -243,6 +243,6 @@ if __name__ == "__main__":
     try:
         process_target_pdf()
     except Exception as e:
-        print(f"\n❌ Error: {e}")
+        print(f"\n[ERROR] Error: {e}")
         import traceback
         traceback.print_exc()

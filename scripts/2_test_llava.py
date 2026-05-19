@@ -57,7 +57,7 @@ def init_llava():
     # Load processor
     processor = AutoProcessor.from_pretrained(model_config["model_id"])
 
-    print("   ✅ LLaVA 1.5 7B loaded (4-bit)")
+    print("   [OK] LLaVA 1.5 7B loaded (4-bit)")
 
     return model, processor
 
@@ -165,22 +165,22 @@ def process_all_drawings():
     # Check GPU
     gpu_info = get_gpu_info()
     if not gpu_info["available"]:
-        print("\n⚠️ No GPU detected - LLaVA will be very slow on CPU")
+        print("\n[WARNING] No GPU detected - LLaVA will be very slow on CPU")
     else:
         print(f"\nGPU: {gpu_info['device']} ({gpu_info['free_gb']}GB free)")
 
     # Find PDFs
     pdf_files = list(INPUT_DIR.glob("*.pdf"))
     if not pdf_files:
-        print(f"\n❌ No PDFs in {INPUT_DIR}")
+        print(f"\n[ERROR] No PDFs in {INPUT_DIR}")
         return
 
-    print(f"\n📄 Found {len(pdf_files)} PDFs")
+    print(f"\n[PDF] Found {len(pdf_files)} PDFs")
     for pdf in pdf_files:
         print(f"   • {pdf.name}")
 
     # Initialize LLaVA
-    print("\n📦 Loading LLaVA 1.5 7B...")
+    print("\n[LOADING] Loading LLaVA 1.5 7B...")
     model, processor = init_llava()
 
     # Output directory
@@ -193,7 +193,7 @@ def process_all_drawings():
 
     for pdf_path in tqdm(pdf_files, desc="Processing drawings"):
         drawing_name = pdf_path.stem
-        print(f"\n📄 {drawing_name}")
+        print(f"\n[PDF] {drawing_name}")
 
         # Convert to image
         image = pdf_to_image(
@@ -225,7 +225,7 @@ def process_all_drawings():
 
     # Combined results
     print("\n" + "=" * 60)
-    print("📊 Summary")
+    print("[STATS] Summary")
 
     combined_path = output_dir / "ALL_DRAWINGS_llava_summary.json"
     combined_data = {
@@ -236,7 +236,7 @@ def process_all_drawings():
     }
     save_json(combined_data, combined_path)
 
-    print("\n✅ LLaVA testing complete!")
+    print("\n[OK] LLaVA testing complete!")
     print(f"   Results: {output_dir}")
 
     return all_results
@@ -246,8 +246,8 @@ if __name__ == "__main__":
     try:
         process_all_drawings()
     except KeyboardInterrupt:
-        print("\n\n⚠️ Interrupted")
+        print("\n\n[WARNING] Interrupted")
     except Exception as e:
-        print(f"\n❌ Error: {e}")
+        print(f"\n[ERROR] Error: {e}")
         import traceback
         traceback.print_exc()
