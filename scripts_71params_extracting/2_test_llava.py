@@ -69,6 +69,7 @@ def check_gpu_and_load():
 
 def extract_with_llava(model, processor, image_path: str):
     """Extract information using LLaVA."""
+    import torch
     from PIL import Image
     
     image = Image.open(image_path).convert("RGB")
