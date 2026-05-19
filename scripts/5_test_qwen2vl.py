@@ -82,6 +82,7 @@ def extract_with_qwen2vl(model, processor, image_path: str):
     Extract information using Qwen2-VL.
     Uses chat template for better results.
     """
+    import torch
     from PIL import Image
 
     image = Image.open(image_path).convert("RGB")

@@ -59,6 +59,7 @@ def extract_with_blip2(model, processor, image_path: str):
     NOTE: BLIP2 is designed for SHORT VQA questions, not long prompts.
     We send one short question per task for best results.
     """
+    import torch
     from PIL import Image
 
     image = Image.open(image_path).convert("RGB")
