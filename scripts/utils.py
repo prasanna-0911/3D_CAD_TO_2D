@@ -349,8 +349,8 @@ def merge_split_values(elements: List[Dict], threshold: float = 30) -> List[Dict
         current_text = str(current.get("text", ""))
 
         # Check if this could be start of split value
+        j = i + 1  # Default: move to next element
         if re.match(r'^\d+\.?$', current_text):  # Ends with number or decimal
-            j = i + 1
             while j < len(elements):
                 next_elem = elements[j]
                 next_text = str(next_elem.get("text", ""))
@@ -371,7 +371,7 @@ def merge_split_values(elements: List[Dict], threshold: float = 30) -> List[Dict
                     break
 
         merged.append(current)
-        i = j if j > i else i + 1
+        i = j
 
     return merged
 
