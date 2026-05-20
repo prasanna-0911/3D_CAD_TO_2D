@@ -90,16 +90,20 @@ def extract_values_with_llava(model, processor, image_path: str) -> dict:
     
     results = {}
     
-    # 1. DIMENSIONS - Extract actual values
-    dim_prompt = """Extract ALL dimension values from this engineering drawing.
-For each dimension, provide: value + unit.
-Examples:
-- Linear: "150 mm", "75.5 mm", "2.5 mm"
-- Diameter: "ø10", "ø25 mm", "Ø0.5"
-- Radius: "R5", "R12.5 mm"
-- Angular: "45°", "30°"
-List EVERY dimension visible in the drawing, one per line.
-If no dimensions visible, write "NONE"."""
+    # 1. DIMENSIONS - More explicit prompt
+    dim_prompt = """You are an expert at reading engineering drawings. 
+Look at the image carefully and extract ONLY the dimension values you can ACTUALLY SEE.
+DO NOT invent or guess dimensions.
+DO NOT number dimensions 1,2,3 - just list what you see.
+
+For each dimension you see, write exactly as shown in the drawing:
+- Linear dimensions: "45" (with unit from drawing)
+- Diameter: "Ø12" or "ø10"
+- Radius: "R5" 
+- Angular: "45°"
+
+CRITICAL: Only list dimensions that are VISIBLE in the image. If uncertain, write "NONE".
+Start your answer with "DIMENSIONS:" """
     
     prompt = f"USER: <image>\n{dim_prompt} ASSISTANT:"
     inputs = processor(text=prompt, images=image, return_tensors="pt").to(model.device)
@@ -109,17 +113,20 @@ If no dimensions visible, write "NONE"."""
     
     results["dimensions"] = processor.decode(output[0], skip_special_tokens=True)
     
-    # 2. GD&T SYMBOLS - Extract actual values
-    gdt_prompt = """Extract ALL GD&T (Geometric Dimensioning & Tolerancing) symbols.
-For each symbol provide: symbol type + tolerance value + datum references.
-Examples:
-- Position: "ø0.05 A B C"
-- Flatness: "0.02"
-- Perpendicularity: "0.03 A"
-- Straightness: "0.01"
-- Runout: "0.05 A"
-List EVERY GD&T symbol visible, one per line.
-If none, write "NONE"."""
+    # 2. GD&T SYMBOLS - More explicit
+    gdt_prompt = """You are an expert at reading GD&T symbols in engineering drawings.
+Look at the image carefully for feature control frames and GD&T symbols.
+Extract ONLY symbols you can ACTUALLY SEE.
+
+For each GD&T symbol, note:
+- The geometric tolerance type (position, flatness, straightness, etc.)
+- The tolerance value
+- The datum references
+
+Example format: "Position: Ø0.05 A B C" or "Flatness: 0.02"
+DO NOT invent symbols that are not visible.
+If none visible, write "NONE".
+Start your answer with "GDT:" """
     
     prompt = f"USER: <image>\n{gdt_prompt} ASSISTANT:"
     inputs = processor(text=prompt, images=image, return_tensors="pt").to(model.device)
@@ -129,17 +136,19 @@ If none, write "NONE"."""
     
     results["gdt_symbols"] = processor.decode(output[0], skip_special_tokens=True)
     
-    # 3. TITLE BLOCK - Extract actual values
-    title_prompt = """Extract title block information.
-Provide exact values for:
-- Drawing Number:
-- Part Name:
-- Revision:
-- Scale:
-- Units:
-- Date:
-- Author:
-If any field is empty or not visible, write "NOT VISIBLE"."""
+    # 3. TITLE BLOCK - More explicit
+    title_prompt = """Look at the TITLE BLOCK area of this engineering drawing (usually at bottom right or right side).
+Extract ONLY the text you can ACTUALLY READ in these fields:
+- Drawing Number (look for number in title block)
+- Part Name (look for name/title)
+- Revision (look for letter like A, B, C or number)
+- Scale (look for like 1:1, 1:2, 2:1)
+- Units (look for mm, inch, etc.)
+- Date (look for date format)
+- Author (look for name)
+
+Write ONLY what you can read. If field is empty or unreadable, write "NOT FOUND".
+Start your answer with "TITLE BLOCK:" """
     
     prompt = f"USER: <image>\n{title_prompt} ASSISTANT:"
     inputs = processor(text=prompt, images=image, return_tensors="pt").to(model.device)
@@ -149,33 +158,33 @@ If any field is empty or not visible, write "NOT VISIBLE"."""
     
     results["title_block"] = processor.decode(output[0], skip_special_tokens=True)
     
-    # 4. VIEWS - Extract actual values
-    views_prompt = """Identify ALL views in this drawing.
-For each view provide: view name/type + position + scale.
-Examples:
-- Front view at (493.6, 521.9), scale 1:1
-- Top view at (493.6, 705.7), scale 1:1
-- Right view at (1079.8, 705.7), scale 1:1
-List EVERY view visible, one per line."""
+    # 4. VIEWS - More explicit
+    views_prompt = """Look at this engineering drawing and count how many orthographic/pictorial views you can see.
+Types to look for: front view, top view, right side view, left side view, section view, detail view, isometric view.
+DO NOT list all possible views - only count what is ACTUALLY VISIBLE in the drawing.
+If 3 views visible, say "3 views: front, top, right"
+If 6 views visible, list them all.
+Start with "VIEWS:" """
     
     prompt = f"USER: <image>\n{views_prompt} ASSISTANT:"
     inputs = processor(text=prompt, images=image, return_tensors="pt").to(model.device)
     
     with torch.no_grad():
-        output = model.generate(**inputs, max_new_tokens=512, do_sample=False)
+        output = model.generate(**inputs, max_new_tokens=256, do_sample=False)
     
     results["views"] = processor.decode(output[0], skip_special_tokens=True)
     
-    # 5. NOTES - Extract actual values
-    notes_prompt = """Extract ALL notes, annotations, and text visible in this drawing.
-Include:
-- General notes at bottom
-- Surface finish requirements (Ra, Rz)
+    # 5. NOTES - More explicit
+    notes_prompt = """Look at this engineering drawing for text notes and annotations.
+Find and extract:
+- General notes (usually in bottom left area, numbered 1, 2, 3...)
+- Surface finish symbols (Ra, Rz values)
 - Welding symbols
-- Datum identifiers (A, B, C)
-- Any warning/caution text
-Provide FULL TEXT of each note.
-If no notes, write "NONE"."""
+- Datum target points (A, B, C with circles)
+- Any warning or reference notes
+
+Extract the EXACT TEXT as written. If notes area is empty, write "NONE".
+Start with "NOTES:" """
     
     prompt = f"USER: <image>\n{notes_prompt} ASSISTANT:"
     inputs = processor(text=prompt, images=image, return_tensors="pt").to(model.device)
@@ -185,13 +194,18 @@ If no notes, write "NONE"."""
     
     results["notes"] = processor.decode(output[0], skip_special_tokens=True)
     
-    # 6. GEOMETRY FEATURES - Extract actual values
-    geom_prompt = """Identify geometric features and provide counts/sizes:
-- Holes: count + diameters (e.g., "4 holes, ø10mm each")
-- Fillets: count + radii (e.g., "6 fillets, R3mm")
-- Chamfers: count + sizes (e.g., "2 chamfers, 2x45°")
-- Ribs: count + positions
-If none of a type, write "0" for that type."""
+    # 6. GEOMETRY FEATURES - More explicit
+    geom_prompt = """Look at the drawing and count geometric features you can SEE:
+- Count all CIRCULAR holes (with diameters visible)
+- Count all FILLETS (rounded corners, R values)
+- Count all CHAMFERS (angled cuts, often 45 degrees)
+- Count all RIBS (thin vertical/horizontal supporting features)
+
+For each type, give count and sizes if visible.
+Example: "Holes: 4 holes visible, Ø8, Ø12"
+Example: "Fillets: 6 fillets visible"
+DO NOT guess - only count what you can see.
+Start with "GEOMETRY:" """
     
     prompt = f"USER: <image>\n{geom_prompt} ASSISTANT:"
     inputs = processor(text=prompt, images=image, return_tensors="pt").to(model.device)
@@ -201,10 +215,12 @@ If none of a type, write "0" for that type."""
     
     results["geometry"] = processor.decode(output[0], skip_special_tokens=True)
     
-    # 7. BOM - Extract actual values
-    bom_prompt = """Extract Bill of Materials (BOM) if visible.
-Provide: item number + part name + quantity.
-If no BOM, write "NONE"."""
+    # 7. BOM - More explicit
+    bom_prompt = """Look for a Bill of Materials (BOM) table in this drawing.
+Usually appears as a table with: Item No, Part Name, Quantity, Material columns.
+If BOM table is visible, extract: item number, part name, quantity.
+If no BOM visible, write "NONE".
+Start with "BOM:" """
     
     prompt = f"USER: <image>\n{bom_prompt} ASSISTANT:"
     inputs = processor(text=prompt, images=image, return_tensors="pt").to(model.device)
@@ -220,23 +236,28 @@ def parse_extracted_values(extracted: dict) -> dict:
     """Parse extracted text into structured values."""
     parsed = {}
     
-    def get_answer_only(text: str) -> str:
-        """Extract only the answer after ASSISTANT:"""
+    def get_answer_only(text: str, prefix: str = None) -> str:
+        """Extract only the answer after ASSISTANT: and optional prefix."""
         if "ASSISTANT:" in text:
-            return text.split("ASSISTANT:")[-1].strip()
-        return text.strip()
+            text = text.split("ASSISTANT:")[-1].strip()
+        
+        if prefix and prefix in text.upper():
+            text = text.split(prefix)[-1].strip()
+        
+        return text
     
-    # Parse dimensions - extract numbers
-    dim_text = get_answer_only(extracted.get("dimensions", ""))
+    # Parse dimensions
+    dim_text = get_answer_only(extracted.get("dimensions", ""), "DIMENSIONS:")
     dimensions = []
     for line in dim_text.split("\n"):
         line = line.strip()
-        if line and line != "NONE" and "Length:" in line:
-            # Extract just the dimension value
-            parts = line.split("Length:", 1)
-            if len(parts) > 1:
-                dimensions.append(parts[1].strip())
-    parsed["dimensions"] = dimensions[:20]  # Limit to 20
+        # Skip empty lines and "NONE"
+        if line and line.upper() != "NONE":
+            # Extract numbers with units
+            numbers = re.findall(r'[\d.]+\s*(?:mm|°|ø|Ø|R)?', line, re.IGNORECASE)
+            if numbers and len(line) < 50:  # Reasonable length for dimension
+                dimensions.append(line)
+    parsed["dimensions"] = dimensions[:20]
     
     # Parse GD&T
     gdt_text = get_answer_only(extracted.get("gdt_symbols", ""))
