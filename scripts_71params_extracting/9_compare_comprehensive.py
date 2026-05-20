@@ -101,7 +101,7 @@ def create_comparison_table(extracted_data: dict, gt_values: dict) -> pd.DataFra
         ext_val = title_block.get(extracted_key, "NOT FOUND")
         gt_val = gt_values.get(param, "N/A")
         
-        match = "✓" if str(ext_val).strip() == str(gt_val).strip() else "✗"
+        match = "MATCH" if str(ext_val).strip() == str(gt_val).strip() else "NO MATCH"
         
         rows.append({
             "Category": "Title Block",
@@ -120,7 +120,7 @@ def create_comparison_table(extracted_data: dict, gt_values: dict) -> pd.DataFra
         "Parameter": "Number of Views",
         "Extracted_Value": f"{len(views)} views found",
         "Ground_Truth": gt_views,
-        "Match": "✓" if len(views) == gt_views else "✗",
+        "Match": "MATCH" if len(views) == gt_views else "NO MATCH",
         "Source": "Extraction vs GT"
     })
     
@@ -171,20 +171,21 @@ def create_comparison_table(extracted_data: dict, gt_values: dict) -> pd.DataFra
         })
     
     # 2. GROUND TRUTH PARAMETERS (not visible in image)
+    # Key names from DrawingInputSheet.xlsx
     gt_only_params = [
-        ("Sheet_Settings", "Sheet_Width", "GT_1"),
-        ("Sheet_Settings", "Sheet_Height", "GT_2"),
-        ("Drafting_Settings", "Text Size", "GT_5"),
-        ("Drafting_Settings", "Arrow Size", "GT_6"),
-        ("Drafting_Settings", "Leader Stub Size", "GT_7"),
-        ("Drafting_Settings", "Dimension Precision", "GT_8"),
+        ("Sheet_Settings", "Sheet_Width", "Sheet_Width"),
+        ("Sheet_Settings", "Sheet_Height", "Sheet_Height"),
+        ("Drafting_Settings", "Text Size", "Drafting_TextSize"),
+        ("Drafting_Settings", "Arrow Size", "Drafting_ArrowSize"),
+        ("Drafting_Settings", "Leader Stub Size", "Drafting_LeaderStubSize"),
+        ("Drafting_Settings", "Dimension Precision", "Drafting_DimensionPrecision"),
     ]
     
-    for cat, param_name, gt_id in gt_only_params:
-        gt_val = gt_values.get(param_name, "NOT FOUND")
+    for cat, display_name, gt_key in gt_only_params:
+        gt_val = gt_values.get(gt_key, "NOT FOUND")
         rows.append({
             "Category": cat,
-            "Parameter": param_name,
+            "Parameter": display_name,
             "Extracted_Value": "NOT VISIBLE (CAD internal setting)",
             "Ground_Truth": gt_val,
             "Match": "N/A",
@@ -231,7 +232,7 @@ def main():
             "Total Parameters": len(comparison_df),
             "Extracted from Image": len(comparison_df[comparison_df['Source'] == 'Extraction']),
             "Ground Truth Only": len(comparison_df[comparison_df['Source'] == 'GT only']),
-            "Matches with GT": len(comparison_df[(comparison_df['Match'] == '✓') & (comparison_df['Source'] == 'Extraction vs GT')]),
+            "Matches with GT": len(comparison_df[(comparison_df['Match'] == 'MATCH') & (comparison_df['Source'] == 'Extraction vs GT')]),
         }
         
         pd.DataFrame([summary]).to_excel(writer, sheet_name='Summary', index=False)
