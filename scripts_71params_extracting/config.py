@@ -245,8 +245,8 @@ MODELS_CONFIG = {
         "enabled": True,
         "name": "Qwen2-VL 7B",
         "model_id": "Qwen/Qwen2-VL-7B-Instruct",
-        "quantization": "8bit",
-        "vram_estimate_gb": 8,
+        "quantization": "none",  # FP16 non-quantized
+        "vram_estimate_gb": 14,
     },
 }
 
