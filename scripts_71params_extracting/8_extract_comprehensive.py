@@ -48,32 +48,22 @@ def load_llava():
     from transformers import AutoProcessor, LlavaForConditionalGeneration
     import torch
     
-    from transformers import BitsAndBytesConfig
-    
     model_config = MODELS_CONFIG["llava_1.5_7b"]
-    print(f"   Loading {model_config['name']}...")
+    print(f"   Loading {model_config['name']} (FP16, non-quantized)...")
     
     processor = AutoProcessor.from_pretrained(
         model_config["model_id"],
         use_fast=False
     )
     
-    # 4-bit quantization config
-    bnb_config = BitsAndBytesConfig(
-        load_in_4bit=True,
-        bnb_4bit_compute_dtype=torch.float16,
-        bnb_4bit_use_double_quant=True,
-        bnb_4bit_quant_type="nf4"
-    )
-    
+    # FP16 - non-quantized (uses ~14GB VRAM)
     model = LlavaForConditionalGeneration.from_pretrained(
         model_config["model_id"],
-        quantization_config=bnb_config,
         torch_dtype=torch.float16,
-        device_map="auto",
+        device_map="auto"
     )
     
-    print("   [OK] LLaVA loaded")
+    print("   [OK] LLaVA loaded (FP16)")
     return model, processor
 
 def extract_values_with_llava(model, processor, image_path: str) -> dict:
