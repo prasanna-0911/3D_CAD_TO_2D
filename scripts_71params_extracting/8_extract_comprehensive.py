@@ -220,73 +220,77 @@ def parse_extracted_values(extracted: dict) -> dict:
     """Parse extracted text into structured values."""
     parsed = {}
     
+    def get_answer_only(text: str) -> str:
+        """Extract only the answer after ASSISTANT:"""
+        if "ASSISTANT:" in text:
+            return text.split("ASSISTANT:")[-1].strip()
+        return text.strip()
+    
     # Parse dimensions - extract numbers
-    dim_text = extracted.get("dimensions", "")
+    dim_text = get_answer_only(extracted.get("dimensions", ""))
     dimensions = []
     for line in dim_text.split("\n"):
         line = line.strip()
-        if line and line != "NONE" and not line.startswith("USER") and not line.startswith("ASSISTANT"):
-            # Extract numbers with units
-            numbers = re.findall(r'[\d.]+\s*(?:mm|°|ø|Ø|R)?', line, re.IGNORECASE)
-            if numbers:
-                dimensions.append(line)
+        if line and line != "NONE" and "Length:" in line:
+            # Extract just the dimension value
+            parts = line.split("Length:", 1)
+            if len(parts) > 1:
+                dimensions.append(parts[1].strip())
     parsed["dimensions"] = dimensions[:20]  # Limit to 20
     
     # Parse GD&T
-    gdt_text = extracted.get("gdt_symbols", "")
+    gdt_text = get_answer_only(extracted.get("gdt_symbols", ""))
     gdt_symbols = []
     for line in gdt_text.split("\n"):
         line = line.strip()
-        if line and line != "NONE" and not line.startswith("USER") and not line.startswith("ASSISTANT"):
+        if line and line != "NONE":
             gdt_symbols.append(line)
     parsed["gdt_symbols"] = gdt_symbols[:15]
     
     # Parse title block - extract key-value pairs
-    title_text = extracted.get("title_block", "")
+    title_text = get_answer_only(extracted.get("title_block", ""))
     title_block = {}
     for line in title_text.split("\n"):
         if ":" in line:
-            key, value = line.split(":", 1)
-            title_block[key.strip()] = value.strip()
+            parts = line.split(":", 1)
+            if len(parts) == 2:
+                key = parts[0].strip()
+                value = parts[1].strip()
+                if key and value:
+                    title_block[key] = value
     parsed["title_block"] = title_block
     
     # Parse views
-    views_text = extracted.get("views", "")
+    views_text = get_answer_only(extracted.get("views", ""))
     views = []
     for line in views_text.split("\n"):
         line = line.strip()
-        if line and line != "NONE" and not line.startswith("USER") and not line.startswith("ASSISTANT"):
+        if line and line != "NONE" and "view" in line.lower():
             views.append(line)
     parsed["views"] = views[:10]
     
     # Parse notes
-    notes_text = extracted.get("notes", "")
+    notes_text = get_answer_only(extracted.get("notes", ""))
     notes = []
     for line in notes_text.split("\n"):
         line = line.strip()
-        if line and line != "NONE" and not line.startswith("USER") and not line.startswith("ASSISTANT"):
+        if line and line != "NONE":
             notes.append(line)
     parsed["notes"] = notes[:15]
     
     # Parse geometry
-    geom_text = extracted.get("geometry", "")
+    geom_text = get_answer_only(extracted.get("geometry", ""))
     geometry = {}
-    for line in geom_text.split("\n"):
-        line = line.strip()
-        if "hole" in line.lower():
-            geometry["holes"] = line
-        elif "fillet" in line.lower():
-            geometry["fillets"] = line
-        elif "chamfer" in line.lower():
-            geometry["chamfers"] = line
+    # Extract just the answer portion
+    geometry["description"] = geom_text[:200] if geom_text else "NONE"
     parsed["geometry"] = geometry
     
     # Parse BOM
-    bom_text = extracted.get("bom", "")
+    bom_text = get_answer_only(extracted.get("bom", ""))
     bom = []
     for line in bom_text.split("\n"):
         line = line.strip()
-        if line and line != "NONE" and not line.startswith("USER") and not line.startswith("ASSISTANT"):
+        if line and line != "NONE":
             bom.append(line)
     parsed["bom"] = bom[:10]
     
